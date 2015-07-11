@@ -24,6 +24,7 @@
 #include <linux/string.h>
 
 #include "mdss_dsi.h"
+#include "mdss_livedisplay.h"
 
 /*FIH, Hubert, 20151021, modify the order of touch suspend before backlight for [NBQ-502] {*/
 #include <fih/hwid.h>
@@ -232,7 +233,7 @@ bool IsNewLCM(void)
 }
 /*} FIH, Hubert, 20151127, use lcm regs (DBh) to work with TP FW upgrade*/
 
-static void mdss_dsi_panel_cmds_send(struct mdss_dsi_ctrl_pdata *ctrl,
+void mdss_dsi_panel_cmds_send(struct mdss_dsi_ctrl_pdata *ctrl,
 			struct dsi_panel_cmds *pcmds, u32 flags)
 {
 	struct dcs_cmd_req cmdreq;
@@ -825,6 +826,7 @@ static int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
 	{
 		mdss_dsi_panel_bl_ctrl(pdata, 102);
 	}	
+
 end:
 	pinfo->blank_state = MDSS_PANEL_BLANK_UNBLANK;
 	pr_debug("%s:-\n", __func__);
@@ -933,7 +935,7 @@ static void mdss_dsi_parse_trigger(struct device_node *np, char *trigger,
 }
 
 
-static int mdss_dsi_parse_dcs_cmds(struct device_node *np,
+int mdss_dsi_parse_dcs_cmds(struct device_node *np,
 		struct dsi_panel_cmds *pcmds, char *cmd_key, char *link_key)
 {
 	const char *data;
@@ -2146,6 +2148,8 @@ static int mdss_panel_parse_dt(struct device_node *np,
 	mdss_dsi_parse_dcs_cmds(np, &ctrl_pdata->ce_off_cmds,
 		"qcom,mdss-dsi-ce-off-command", "qcom,mdss-dsi-ce-off-command-state");
 	// } KuroCHChung@fih-foxconn.com CABC Porting 20151029
+
+	mdss_livedisplay_parse_dt(np, pinfo);
 
 	return 0;
 
