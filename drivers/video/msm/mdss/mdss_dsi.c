@@ -28,6 +28,7 @@
 #include "mdss_panel.h"
 #include "mdss_dsi.h"
 #include "mdss_debug.h"
+#include "mdss_livedisplay.h"
 
 /*FIH, Hubert, 20151127, use lcm regs (DBh) to work with TP FW upgrade {*/
 extern ssize_t panel_print_status2(struct mdss_dsi_ctrl_pdata *ctrl_pdata);
@@ -923,6 +924,8 @@ static int mdss_dsi_unblank(struct mdss_panel_data *pdata)
 // FIH, Hubert, 20151127, use lcm regs (DBh) to work with TP FW upgrade {
 	panel_print_status2(ctrl_pdata);
 //} FIH, Hubert, 20151127, use lcm regs (DBh) to work with TP FW upgrade
+
+	mdss_livedisplay_update(ctrl_pdata, MODE_UPDATE_ALL);
 
 error:
 	mdss_dsi_clk_ctrl(ctrl_pdata, DSI_ALL_CLKS, 0);
