@@ -5,6 +5,7 @@
  *
  * Copyright (C) 2012 Alexandra Chin <alexandra.chin@tw.synaptics.com>
  * Copyright (C) 2012 Scott Lin <scott.lin@tw.synaptics.com>
+ * Copyright (c) 2015-2016, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -105,6 +106,7 @@ struct synaptics_dsx_board_data {
 	u32 disp_maxy;
 	bool disable_gpios;
 	bool detect_device;
+	bool resume_in_workqueue;
 	const char *fw_name;
 /* NBQ - EricHsieh - [06-23] - [Touch] Synaptics touch driver porting */
 	int rx_of_key;
