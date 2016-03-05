@@ -29,7 +29,20 @@
 #include "mdss_dsi.h"
 #include "mdss_debug.h"
 
+/*FIH, Hubert, 20151127, use lcm regs (DBh) to work with TP FW upgrade {*/
+extern ssize_t panel_print_status2(struct mdss_dsi_ctrl_pdata *ctrl_pdata);
+/*} FIH, Hubert, 20151127, use lcm regs (DBh) to work with TP FW upgrade*/
+
 #define XO_CLK_RATE	19200000
+
+static struct mdss_dsi_ctrl_pdata *gpdata  = NULL;
+static struct class *lcd_class;
+int CABC_enable = 0;
+int CE_enable = 0;
+EXPORT_SYMBOL(CABC_enable);
+EXPORT_SYMBOL(CE_enable);
+static unsigned long current_cabc = 0;
+static unsigned long current_ce = 0;
 
 static struct dsi_drv_cm_data shared_ctrl_data;
 
@@ -894,6 +907,10 @@ static int mdss_dsi_unblank(struct mdss_panel_data *pdata)
 			enable_irq(gpio_to_irq(ctrl_pdata->disp_te_gpio));
 	}
 
+// FIH, Hubert, 20151127, use lcm regs (DBh) to work with TP FW upgrade {
+	panel_print_status2(ctrl_pdata);
+//} FIH, Hubert, 20151127, use lcm regs (DBh) to work with TP FW upgrade
+
 error:
 	mdss_dsi_clk_ctrl(ctrl_pdata, DSI_ALL_CLKS, 0);
 	pr_debug("%s-:\n", __func__);
@@ -1683,6 +1700,117 @@ end:
 	return dsi_pan_node;
 }
 
+int fih_get_cabc (void)
+{
+	return current_cabc;
+}
+EXPORT_SYMBOL(fih_get_cabc);
+
+int fih_set_cabc(int cabc)
+{
+	int res;
+
+	// Try to update Current CABC Value
+	res = mdss_dsi_panel_cabc_ctrl(gpdata, cabc);
+	if (res < 0)
+	{
+		pr_err("%s: cabc set failed!\n", __func__);
+		goto fail;
+	}
+
+	current_cabc = cabc;
+
+fail:
+	return res;
+}
+EXPORT_SYMBOL(fih_set_cabc);
+
+int fih_get_ce (void)
+{
+	return current_ce;
+}
+EXPORT_SYMBOL(fih_get_ce);
+
+int fih_set_ce (int ce)
+{
+	int res;
+
+	res = mdss_dsi_panel_ce_onoff(gpdata, ce);
+	if (res < 0)
+	{
+		pr_err("%s: ce set failed!\n", __func__);
+		goto fail;
+	}
+
+	current_ce = ce;
+
+fail:
+	return res;
+}
+EXPORT_SYMBOL(fih_set_ce);
+
+static ssize_t ce_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	 return sprintf(buf, "%lu\n", current_ce);
+}
+
+static ssize_t ce_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
+{
+	int rc = -ENXIO;
+	rc = kstrtoul(buf, 0, &current_ce);
+	if (rc)
+	{
+		return rc;
+	}
+
+	if (current_ce)
+	{
+		mdss_dsi_panel_ce_onoff(gpdata, 1);
+	}
+	else
+	{
+		mdss_dsi_panel_ce_onoff(gpdata, 0);
+	}
+
+	return count;
+}
+
+static ssize_t cabc_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	 return sprintf(buf, "%lu\n", current_cabc);
+}
+
+static ssize_t cabc_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
+{
+	int rc = -ENXIO;
+
+	rc = kstrtoul(buf, 0, &current_cabc);
+	if (rc)
+	{
+		return rc;
+	}
+
+	mdss_dsi_panel_cabc_ctrl(gpdata, current_cabc);
+
+	return count;
+}
+
+static struct device_attribute lcd_device_attributes_ce[] = {
+	__ATTR(color_mode, 0664, ce_show, ce_store),
+	__ATTR_NULL,
+};
+
+static struct device_attribute lcd_device_attributes_cabc[] = {
+	__ATTR(cabc_setting, 0664, cabc_show, cabc_store),
+	__ATTR_NULL,
+};
+
+static struct device_attribute lcd_device_attributes_ce_cabc[] = {
+	__ATTR(color_mode, 0664, ce_show, ce_store),
+	__ATTR(cabc_setting, 0664, cabc_show, cabc_store),
+	__ATTR_NULL,
+};
+
 static int mdss_dsi_ctrl_probe(struct platform_device *pdev)
 {
 	int rc = 0, i = 0;
@@ -1833,6 +1961,49 @@ static int mdss_dsi_ctrl_probe(struct platform_device *pdev)
 		disable_irq(gpio_to_irq(ctrl_pdata->disp_te_gpio));
 	}
 	pr_debug("%s: Dsi Ctrl->%d initialized\n", __func__, index);
+
+	// KuroCHChung@fih-foxconn.com for CABC Porting 20151029 {
+	if((ctrl_pdata->cabc_off_cmds.cmd_cnt) &&
+		(ctrl_pdata->cabc_ui_cmds.cmd_cnt) &&
+		(ctrl_pdata->cabc_still_cmds.cmd_cnt) &&
+		(ctrl_pdata->cabc_moving_cmds.cmd_cnt))
+	{
+		CABC_enable = 1;
+	}
+
+	if((ctrl_pdata->ce_off_cmds.cmd_cnt) &&
+		(ctrl_pdata->ce_on_cmds.cmd_cnt))
+	{
+		CE_enable = 1;
+	}
+
+	if(CABC_enable || CE_enable)
+	{
+
+		gpdata = ctrl_pdata;
+
+		lcd_class = class_create(THIS_MODULE, "lcm");
+
+		if (IS_ERR(lcd_class))
+		{
+			pr_err("Unable to create lcm class; errno = %ld\n",
+					PTR_ERR(lcd_class));
+			return PTR_ERR(lcd_class);
+		}
+
+		if(CABC_enable && !CE_enable) {
+			lcd_class->dev_attrs = lcd_device_attributes_cabc;
+		} else if(!CABC_enable && CE_enable) {
+			lcd_class->dev_attrs = lcd_device_attributes_ce;
+		} else if(CABC_enable && CE_enable) {
+			lcd_class->dev_attrs = lcd_device_attributes_ce_cabc;
+		}
+
+		device_create(lcd_class, NULL, 0, NULL, "lcd");
+	}
+
+	//} KuroCHChung@fih-foxconn.com for CABC Porting 20151029
+
 	return 0;
 
 error_pan_node:
@@ -2106,6 +2277,18 @@ int dsi_panel_device_register(struct device_node *pan_node,
 			pr_err("%s:%d, Disp_en gpio not specified\n",
 					__func__, __LINE__);
 	}
+
+//<<[NBQ-16] EricHsieh, Implement the OTM1926C CTC 5.2" panel 	
+	if (ctrl_pdata->disp_ldo_gpio <= 0) {
+		ctrl_pdata->disp_ldo_gpio = of_get_named_gpio(
+			ctrl_pdev->dev.of_node,
+			"qcom,platform-ldo-gpio", 0);
+
+		if (!gpio_is_valid(ctrl_pdata->disp_en_gpio))
+			pr_err("%s:%d, Disp_en gpio not specified\n",
+					__func__, __LINE__);
+	}
+//>>[NBQ-16] EricHsieh,END
 
 	ctrl_pdata->disp_te_gpio = of_get_named_gpio(ctrl_pdev->dev.of_node,
 		"qcom,platform-te-gpio", 0);
