@@ -483,4 +483,12 @@ static inline int cpufreq_generic_exit(struct cpufreq_policy *policy)
 	return 0;
 }
 
+//20150330 FAO-537 IsonYHHung start
+struct _cpufreq_subsys_opt {
+	unsigned int (*cpuload)(struct cpufreq_policy *p, unsigned int load);
+	unsigned int (*freq_tuning)(struct cpufreq_policy *p, unsigned int f);
+};
+void register_cpufreq_subsys_opt(struct _cpufreq_subsys_opt *opt);
+//20150330 FAO-537 IsonYHHung end
+
 #endif /* _LINUX_CPUFREQ_H */
