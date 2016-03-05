@@ -27,6 +27,11 @@
 
 #define VBUS_REG_CHECK_DELAY	(msecs_to_jiffies(1000))
 #define MAX_INVALID_CHRGR_RETRY 3
+#define FIH_CHARGER_DETECT
+#ifdef FIH_CHARGER_DETECT
+#include <linux/usb/msm_hsusb.h>
+#define FIH_SPD_CHECK_DELAY	(msecs_to_jiffies(1000))
+#endif
 static int max_chgr_retry_count = MAX_INVALID_CHRGR_RETRY;
 module_param(max_chgr_retry_count, int, S_IRUGO | S_IWUSR);
 MODULE_PARM_DESC(max_chgr_retry_count, "Max invalid charger retry count");
@@ -489,7 +494,12 @@ void dwc3_otg_init_sm(struct dwc3_otg *dotg)
 	if (dwc->vbus_active)
 		set_bit(B_SESS_VLD, &dotg->inputs);
 }
-
+#ifdef FIH_CHARGER_DETECT
+extern void fih_dwc3_start_chg_det(bool start);
+extern int check_charger_detect_status(void);
+extern int check_charger_detect_type(void);
+int fih_sdp_retry_count = 0;
+#endif
 /**
  * dwc3_otg_sm_work - workqueue function.
  *
@@ -575,9 +585,37 @@ static void dwc3_otg_sm_work(struct work_struct *w)
 					work = 1;
 					break;
 				case DWC3_SDP_CHARGER:
-					dwc3_otg_start_peripheral(&dotg->otg,
-									1);
-					phy->state = OTG_STATE_B_PERIPHERAL;
+#ifdef FIH_CHARGER_DETECT
+					fih_sdp_retry_count++;
+					if (fih_sdp_retry_count >= 10) {
+						dev_err(phy->dev, "sdp detect timeout\n");
+						fih_dwc3_start_chg_det(false);
+						dwc3_otg_start_peripheral(&dotg->otg,
+										1);
+						phy->state = OTG_STATE_B_PERIPHERAL;
+						fih_sdp_retry_count = 0;
+					} else {
+						int charger_detect_status, charger_detect_type;
+						charger_detect_status = check_charger_detect_status();
+						charger_detect_type = check_charger_detect_type();
+						if ((charger_detect_status == USB_CHG_STATE_DETECTED) ||
+								(charger_detect_type != DWC3_INVALID_CHARGER)){
+#endif
+							dwc3_otg_start_peripheral(&dotg->otg,
+											1);
+							phy->state = OTG_STATE_B_PERIPHERAL;
+#ifdef FIH_CHARGER_DETECT
+							delay = FIH_SPD_CHECK_DELAY;
+							fih_sdp_retry_count = 0;
+						} else if ((charger_detect_status != USB_CHG_STATE_DETECTED) &&
+								(charger_detect_type == DWC3_INVALID_CHARGER)) {
+							fih_dwc3_start_chg_det(true);
+							delay = FIH_SPD_CHECK_DELAY;
+						} else {
+							delay = FIH_SPD_CHECK_DELAY;
+						}
+					}
+#endif
 					work = 1;
 					break;
 				case DWC3_FLOATED_CHARGER:
