@@ -221,6 +221,7 @@ qpnp_rtc_set_time(struct device *dev, struct rtc_time *tm)
 	rtc_dd->alarm_ctrl_reg1 = ctrl_reg;
 
 rtc_rw_fail:
+	printk("BBox: rtc_rw_fail\n"); //FIH,Michael,2015/11/20 ,add for BBS
 	if (alarm_enabled)
 		spin_unlock_irqrestore(&rtc_dd->alarm_ctrl_lock, irq_flags);
 
@@ -271,6 +272,8 @@ qpnp_rtc_read_time(struct device *dev, struct rtc_time *tm)
 	rc = rtc_valid_tm(tm);
 	if (rc) {
 		dev_err(dev, "Invalid time read from RTC\n");
+		printk("BBox: [%s]Invalid time read from RTC\n", __func__); //FIH,Michael,2015/11/20 ,add for BBS
+		printk("BBox::UEC;18::1\n");
 		return rc;
 	}
 
@@ -299,12 +302,16 @@ qpnp_rtc_set_alarm(struct device *dev, struct rtc_wkalrm *alarm)
 	rc = qpnp_rtc_read_time(dev, &rtc_tm);
 	if (rc) {
 		dev_err(dev, "Unable to read RTC time\n");
+		printk("BBox: [%s]Unable to read RTC time\n", __func__); //FIH,Michael,2015/11/20 ,add for BBS
+		printk("BBox::UEC;18::2\n");
 		return -EINVAL;
 	}
 
 	rtc_tm_to_time(&rtc_tm, &secs_rtc);
 	if (secs < secs_rtc) {
 		dev_err(dev, "Trying to set alarm in the past\n");
+		printk("BBox: [%s]Trying to set alarm in the past\n", __func__); //FIH,Michael,2015/11/20 ,add for BBS
+		printk("BBox::UEC;18::2\n");
 		return -EINVAL;
 	}
 
@@ -358,6 +365,8 @@ qpnp_rtc_read_alarm(struct device *dev, struct rtc_wkalrm *alarm)
 				NUM_8_BIT_RTC_REGS);
 	if (rc) {
 		dev_err(dev, "Read from ALARM reg failed\n");
+		printk("BBox: [%s]Read from ALARM reg failed\n", __func__); //FIH,Michael,2015/11/20 ,add for BBS
+		printk("BBox::UEC;18::2\n");
 		return rc;
 	}
 
@@ -367,6 +376,8 @@ qpnp_rtc_read_alarm(struct device *dev, struct rtc_wkalrm *alarm)
 	rc = rtc_valid_tm(&alarm->time);
 	if (rc) {
 		dev_err(dev, "Invalid time read from RTC\n");
+		printk("BBox: [%s]Invalid time read from RTC\n", __func__); //FIH,Michael,2015/11/20 ,add for BBS
+		printk("BBox::UEC;18::2\n");
 		return rc;
 	}
 
@@ -473,6 +484,8 @@ static int qpnp_rtc_probe(struct spmi_device *spmi)
 	rtc_dd = devm_kzalloc(&spmi->dev, sizeof(*rtc_dd), GFP_KERNEL);
 	if (rtc_dd == NULL) {
 		dev_err(&spmi->dev, "Unable to allocate memory!\n");
+		printk("BBox: [%s]Unable to allocate memory!\n", __func__); //FIH,Michael,2015/11/20 ,add for BBS
+		printk("BBox::UEC;18::3");
 		return -ENOMEM;
 	}
 
@@ -482,6 +495,8 @@ static int qpnp_rtc_probe(struct spmi_device *spmi)
 	if (rc && rc != -EINVAL) {
 		dev_err(&spmi->dev,
 			"Error reading rtc_write_enable property %d\n", rc);
+		printk("BBox: [%s]Error reading rtc_write_enable property %d\n", __func__,rc); //FIH,Michael,2015/11/20 ,add for BBS
+		printk("BBox::UEC;18::3");
 		return rc;
 	}
 
@@ -491,6 +506,8 @@ static int qpnp_rtc_probe(struct spmi_device *spmi)
 	if (rc && rc != -EINVAL) {
 		dev_err(&spmi->dev,
 			"Error reading rtc_alarm_powerup property %d\n", rc);
+			printk("BBox: [%s]Error reading rtc_alarm_powerup property %d\n", __func__,rc); //FIH,Michael,2015/11/20 ,add for BBS
+			printk("BBox::UEC;18::3");
 		return rc;
 	}
 
@@ -506,6 +523,8 @@ static int qpnp_rtc_probe(struct spmi_device *spmi)
 			dev_err(&spmi->dev,
 				"%s: rtc_alarm: spmi resource absent!\n",
 				__func__);
+			printk("BBox: [%s]rtc_alarm: spmi resource absent!\n", __func__); //FIH,Michael,2015/11/20 ,add for BBS
+			printk("BBox::UEC;18::3");
 			rc = -ENXIO;
 			goto fail_rtc_enable;
 		}
@@ -516,6 +535,8 @@ static int qpnp_rtc_probe(struct spmi_device *spmi)
 			dev_err(&spmi->dev,
 				"%s: node %s IO resource absent!\n",
 				__func__, spmi->dev.of_node->full_name);
+			printk("BBox: [%s]node %s IO resource absent!\n", __func__,spmi->dev.of_node->full_name); //FIH,Michael,2015/11/20 ,add for BBS
+			printk("BBox::UEC;18::3");
 			rc = -ENXIO;
 			goto fail_rtc_enable;
 		}
@@ -525,6 +546,8 @@ static int qpnp_rtc_probe(struct spmi_device *spmi)
 		if (rc) {
 			dev_err(&spmi->dev,
 				"Peripheral subtype read failed\n");
+			printk("BBox: [%s]Peripheral subtype read failed\n", __func__); //FIH,Michael,2015/11/20 ,add for BBS
+			printk("BBox::UEC;18::3");
 			goto fail_rtc_enable;
 		}
 
@@ -538,12 +561,16 @@ static int qpnp_rtc_probe(struct spmi_device *spmi)
 				spmi_get_irq(spmi, spmi_resource, 0);
 			if (rtc_dd->rtc_alarm_irq < 0) {
 				dev_err(&spmi->dev, "ALARM IRQ absent\n");
+				printk("BBox: [%s]ALARM IRQ absent\n", __func__); //FIH,Michael,2015/11/20 ,add for BBS
+				printk("BBox::UEC;18::3");
 				rc = -ENXIO;
 				goto fail_rtc_enable;
 			}
 			break;
 		default:
 			dev_err(&spmi->dev, "Invalid peripheral subtype\n");
+			printk("BBox: [%s]Invalid peripheral subtype\n", __func__); //FIH,Michael,2015/11/20 ,add for BBS
+			printk("BBox::UEC;18::3");
 			rc = -EINVAL;
 			goto fail_rtc_enable;
 		}
@@ -554,12 +581,16 @@ static int qpnp_rtc_probe(struct spmi_device *spmi)
 	if (rc) {
 		dev_err(&spmi->dev,
 			"Read from RTC control reg failed\n");
+		printk("BBox: [%s]Read from RTC control reg failed\n", __func__); //FIH,Michael,2015/11/20 ,add for BBS
+		printk("BBox::UEC;18::3");
 		goto fail_rtc_enable;
 	}
 
 	if (!(rtc_dd->rtc_ctrl_reg & BIT_RTC_ENABLE)) {
 		dev_err(&spmi->dev,
 			"RTC h/w disabled, rtc not registered\n");
+		printk("BBox: [%s]RTC h/w disabled, rtc not registered\n", __func__); //FIH,Michael,2015/11/20 ,add for BBS
+		printk("BBox::UEC;18::3");
 		goto fail_rtc_enable;
 	}
 
@@ -568,6 +599,8 @@ static int qpnp_rtc_probe(struct spmi_device *spmi)
 	if (rc) {
 		dev_err(&spmi->dev,
 			"Read from  Alarm control reg failed\n");
+		printk("BBox: [%s]Read from  Alarm control reg failed\n", __func__); //FIH,Michael,2015/11/20 ,add for BBS
+		printk("BBox::UEC;18::3");
 		goto fail_rtc_enable;
 	}
 	/* Enable abort enable feature */
@@ -576,6 +609,8 @@ static int qpnp_rtc_probe(struct spmi_device *spmi)
 			rtc_dd->alarm_base + REG_OFFSET_ALARM_CTRL1, 1);
 	if (rc) {
 		dev_err(&spmi->dev, "SPMI write failed!\n");
+		printk("BBox: [%s]SPMI write failed!\n", __func__); //FIH,Michael,2015/11/20 ,add for BBS
+		printk("BBox::UEC;18::3");
 		goto fail_rtc_enable;
 	}
 
@@ -590,6 +625,8 @@ static int qpnp_rtc_probe(struct spmi_device *spmi)
 	if (IS_ERR(rtc_dd->rtc)) {
 		dev_err(&spmi->dev, "%s: RTC registration failed (%ld)\n",
 					__func__, PTR_ERR(rtc_dd->rtc));
+		printk("BBox: [%s]RTC registration failed (%ld)\n", __func__,PTR_ERR(rtc_dd->rtc)); //FIH,Michael,2015/11/20 ,add for BBS
+		printk("BBox::UEC;18::3");
 		rc = PTR_ERR(rtc_dd->rtc);
 		goto fail_rtc_enable;
 	}
@@ -600,6 +637,8 @@ static int qpnp_rtc_probe(struct spmi_device *spmi)
 				 "qpnp_rtc_alarm", rtc_dd);
 	if (rc) {
 		dev_err(&spmi->dev, "Request IRQ failed (%d)\n", rc);
+		printk("BBox: [%s]Request IRQ failed (%d)\n", __func__,rc); //FIH,Michael,2015/11/20 ,add for BBS
+		printk("BBox::UEC;18::3");
 		goto fail_req_irq;
 	}
 
