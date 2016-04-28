@@ -2133,22 +2133,6 @@ static int mdss_panel_parse_dt(struct device_node *np,
 
 	mdss_dsi_parse_dfps_config(np, ctrl_pdata);
 
-	// KuroCHChung@fih-foxconn.com CABC Porting 20151029 {
-	mdss_dsi_parse_dcs_cmds(np, &ctrl_pdata->cabc_off_cmds,
-		"qcom,mdss-dsi-cabc-off-command", "qcom,mdss-dsi-cabc-off-command-state");
-	mdss_dsi_parse_dcs_cmds(np, &ctrl_pdata->cabc_ui_cmds,
-		"qcom,mdss-dsi-cabc-ui-command", "qcom,mdss-dsi-cabc-ui-command-state");
-	mdss_dsi_parse_dcs_cmds(np, &ctrl_pdata->cabc_still_cmds,
-		"qcom,mdss-dsi-cabc-still-command", "qcom,mdss-dsi-cabc-still-command-state");
-	mdss_dsi_parse_dcs_cmds(np, &ctrl_pdata->cabc_moving_cmds,
-		"qcom,mdss-dsi-cabc-moving-command", "qcom,mdss-dsi-cabc-moving-command-state");
-
-	mdss_dsi_parse_dcs_cmds(np, &ctrl_pdata->ce_on_cmds,
-		"qcom,mdss-dsi-ce-on-command", "qcom,mdss-dsi-ce-on-command-state");
-	mdss_dsi_parse_dcs_cmds(np, &ctrl_pdata->ce_off_cmds,
-		"qcom,mdss-dsi-ce-off-command", "qcom,mdss-dsi-ce-off-command-state");
-	// } KuroCHChung@fih-foxconn.com CABC Porting 20151029
-
 	mdss_livedisplay_parse_dt(np, pinfo);
 
 	return 0;
@@ -2203,69 +2187,6 @@ int mdss_dsi_panel_init(struct device_node *node,
 	ctrl_pdata->low_power_config = mdss_dsi_panel_low_power_config;
 	ctrl_pdata->panel_data.set_backlight = mdss_dsi_panel_bl_ctrl;
 	ctrl_pdata->switch_mode = mdss_dsi_panel_switch_mode;
-
-	return 0;
-}
-
-int mdss_dsi_panel_cabc_ctrl(struct mdss_dsi_ctrl_pdata *ctrl_pdata,
-							int cabc_status)
-{
-
-	if (!(ctrl_pdata->ctrl_state & CTRL_STATE_PANEL_INIT)) {
-		pr_err("%s: panel not init yet, not allow to set CABC command!\n", __func__);
-		return -EBUSY;
-	}
-
-	switch (cabc_status)
-	{
-		case CABC_OFF:
-			mdss_dsi_panel_cmds_send(ctrl_pdata, &ctrl_pdata->cabc_off_cmds, CMD_REQ_COMMIT);
-			break;
-		case CABC_UI:
-			mdss_dsi_panel_cmds_send(ctrl_pdata, &ctrl_pdata->cabc_ui_cmds, CMD_REQ_COMMIT);
-			break;
-		case CABC_STILL:
-			mdss_dsi_panel_cmds_send(ctrl_pdata, &ctrl_pdata->cabc_still_cmds, CMD_REQ_COMMIT);
-			break;
-		case CABC_MOVING:
-			mdss_dsi_panel_cmds_send(ctrl_pdata, &ctrl_pdata->cabc_moving_cmds, CMD_REQ_COMMIT);
-			break;
-		default:
-			pr_err("%s: Unknown cabc_status configuration\n", __func__);
-			return -EINVAL;
-			break;
-	}
-
-	return 0;
-}
-
-int mdss_dsi_panel_ce_onoff(struct mdss_dsi_ctrl_pdata *ctrl_pdata, unsigned long enable)
-{
-	if (!(ctrl_pdata->ctrl_state & CTRL_STATE_PANEL_INIT))
-	{
-		pr_err("%s, panel not init yet, not allow to set CE command!\n", __func__);
-		return -EBUSY;
-	}
-	else
-	{
-		pr_debug("%s, panel already init, allow to set CE command!\n", __func__);
-	}
-
-	if (enable == 1)
-	{
-		pr_err("%s, send enable = 1 command!\n", __func__);
-		mdss_dsi_panel_cmds_send(ctrl_pdata, &ctrl_pdata->ce_on_cmds, CMD_REQ_COMMIT);
-	}
-	else if (enable == 0)
-	{
-		pr_err("%s, send enable = 0 command!\n", __func__);
-		mdss_dsi_panel_cmds_send(ctrl_pdata, &ctrl_pdata->ce_off_cmds, CMD_REQ_COMMIT);
-	}
-	else
-	{
-		pr_err("%s, Invlid input parameter\n", __func__);
-		return -EINVAL;
-	}
 
 	return 0;
 }

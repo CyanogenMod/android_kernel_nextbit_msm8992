@@ -17,4 +17,3 @@ obj-y += fih_nv_cust.o
 obj-y += fih_secboot.o
 obj-y += fih_sensor.o
 obj-y += fih_sd_status.o
-obj-y += fih_lcm.o
