@@ -171,6 +171,12 @@ static const struct soc_enum msm8994_auxpcm_enum[] = {
 		SOC_ENUM_SINGLE_EXT(2, auxpcm_rate_text),
 };
 
+static const char *const pri_mi2s_clk_text[] = {"Off", "On"};
+
+struct snd_soc_card snd_soc_card_msm8994 = {
+	.name	= "msm8994-tomtom-snd-card",
+};
+
 static void *adsp_state_notifier;
 static void *def_codec_mbhc_cal(void);
 static int msm_snd_enable_codec_ext_clk(struct snd_soc_codec *codec,
@@ -232,6 +238,8 @@ static struct afe_clk_cfg mi2s_rx_clk = {
 };
 #endif
 //weihung [NBQM-61]porting aduio function
+
+static atomic_t pri_mi2s_refcount;
 
 static inline int param_is_mask(int p)
 {
@@ -1135,6 +1143,13 @@ static int msm8994_auxpcm_rate_put(struct snd_kcontrol *kcontrol,
 	return 0;
 }
 
+static int pri_mi2s_clk_get(struct snd_kcontrol *kcontrol,
+		struct snd_ctl_elem_value *ucontrol)
+{
+	ucontrol->value.integer.value[0] = atomic_read(&pri_mi2s_refcount) >= 1;
+	return 0;
+}
+
 static int msm_proxy_rx_ch_get(struct snd_kcontrol *kcontrol,
 				struct snd_ctl_elem_value *ucontrol)
 {
@@ -1629,6 +1644,11 @@ static int msm8994_mi2s_rx_snd_startup(struct snd_pcm_substream *substream)
     //weihung [NBQM-61]porting aduio function
 	pr_debug("%s: substream = %s  stream = %d\n", __func__,
 		substream->name, substream->stream);
+
+	if (atomic_inc_return(&pri_mi2s_refcount) != 1) {
+		return 0;
+	}
+
 	if (pinctrl_info == NULL) {
 		pr_err("%s: pinctrl_info is NULL\n", __func__);
 		ret = -EINVAL;
@@ -1656,6 +1676,11 @@ static int msm8994_mi2s_rx_snd_startup(struct snd_pcm_substream *substream)
 	ret = snd_soc_dai_set_fmt(cpu_dai, SND_SOC_DAIFMT_CBS_CFS);
 	if (ret < 0)
 		pr_err("%s: set fmt cpu dai failed, err:%d\n", __func__, ret);
+
+	pr_info("%s Primary MI2S Clock is Enabled\n", __func__);
+	snd_ctl_notify(snd_soc_card_msm8994.snd_card, SNDRV_CTL_EVENT_MASK_VALUE,
+			&snd_soc_card_get_kcontrol(&snd_soc_card_msm8994, "PRI_MI2S Clock")->id);
+
 err:
 	return ret;
 }
@@ -1671,6 +1696,11 @@ static void msm8994_mi2s_rx_snd_shutdown(struct snd_pcm_substream *substream)
    	//weihung [NBQM-61]porting aduio function
 	pr_debug("%s: substream = %s  stream = %d\n", __func__,
 		substream->name, substream->stream);
+
+	if (atomic_dec_return(&pri_mi2s_refcount) > 0) {
+		return;
+	}
+
 	mi2s_rx_clk.clk_val1 = Q6AFE_LPASS_IBIT_CLK_DISABLE;
 	mi2s_rx_clk.clk_set_mode = Q6AFE_LPASS_MODE_CLK1_VALID;
 	ret = afe_set_lpass_clock(AFE_PORT_ID_PRIMARY_MI2S_RX,
@@ -1681,6 +1711,11 @@ static void msm8994_mi2s_rx_snd_shutdown(struct snd_pcm_substream *substream)
 	if (ret)
 		pr_err("%s: Reset pinctrl failed with %d\n",
 			__func__, ret);
+
+	pr_info("%s Primary MI2S Clock is Disabled\n", __func__);
+	snd_ctl_notify(snd_soc_card_msm8994.snd_card, SNDRV_CTL_EVENT_MASK_VALUE,
+			&snd_soc_card_get_kcontrol(&snd_soc_card_msm8994, "PRI_MI2S Clock")->id);
+
 }
 static struct snd_soc_ops msm8994_mi2s_rx_be_ops = {
 	.startup = msm8994_mi2s_rx_snd_startup,
@@ -1808,6 +1843,7 @@ static const struct soc_enum msm_snd_enum[] = {
 	SOC_ENUM_SINGLE_EXT(8, proxy_rx_ch_text),
 	SOC_ENUM_SINGLE_EXT(3, hdmi_rx_sample_rate_text),
 	SOC_ENUM_SINGLE_EXT(2, vi_feed_ch_text),
+	SOC_ENUM_SINGLE_EXT(2, pri_mi2s_clk_text),
 };
 
 static const struct snd_kcontrol_new msm_snd_controls[] = {
@@ -1839,6 +1875,8 @@ static const struct snd_kcontrol_new msm_snd_controls[] = {
 			slim0_tx_bit_format_get, slim0_tx_bit_format_put),
 	SOC_ENUM_EXT("SLIM_0_TX SampleRate", msm_snd_enum[5],
 			slim0_tx_sample_rate_get, slim0_tx_sample_rate_put),
+	SOC_ENUM_EXT("PRI_MI2S Clock", msm_snd_enum[9],
+			pri_mi2s_clk_get, NULL),
 };
 
 static bool msm8994_swap_gnd_mic(struct snd_soc_codec *codec)
@@ -3356,10 +3394,6 @@ static struct snd_soc_dai_link msm8994_dai_links[
 #endif
 //weihung [NBQM-61]porting aduio function
 
-struct snd_soc_card snd_soc_card_msm8994 = {
-	.name		= "msm8994-tomtom-snd-card",
-};
-
 static int msm8994_populate_dai_link_component_of_node(
 					struct snd_soc_card *card)
 {
@@ -3648,6 +3682,8 @@ static int msm8994_asoc_machine_probe(struct platform_device *pdev)
 	if (ret)
 		dev_info(&pdev->dev, "msm8994_prepare_us_euro failed (%d)\n",
 			ret);
+
+	atomic_set(&pri_mi2s_refcount, 0);
 
 //weihung [NBQM-61]porting aduio function
 #ifdef CONFIG_FIH_NBQ_AUDIO
