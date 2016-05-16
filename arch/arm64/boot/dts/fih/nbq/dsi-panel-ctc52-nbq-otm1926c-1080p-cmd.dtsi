@@ -91,7 +91,6 @@
 		qcom,mdss-dsi-panel-status-check-mode = "te_signal_check";
 		qcom,mdss-dsi-tx-eot-append;
 		qcom,esd-check-enabled;
-		qcom,ulps-enabled;
 
 		cm,mdss-livedisplay-command-state = "dsi_lp_mode";
 
