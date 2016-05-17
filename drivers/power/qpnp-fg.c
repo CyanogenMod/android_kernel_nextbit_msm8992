@@ -5252,7 +5252,7 @@ static ssize_t get_fih_fg_ready(struct device *dev,
 	return sprintf(buf, "%d\n", fih_is_fg_ready);
 }
 
-static DEVICE_ATTR(fg_ready, 0664,
+static DEVICE_ATTR(fg_ready, 0444,
 	get_fih_fg_ready, NULL);
 
 static int fg_probe(struct spmi_device *spmi)
