@@ -6177,7 +6177,7 @@ static ssize_t get_fih_reg_dump(struct device *dev,
 	return FIH_REG_SIZE;
 }
 
-static DEVICE_ATTR(reg_dump, 0664,
+static DEVICE_ATTR(reg_dump, 0444,
 	get_fih_reg_dump, NULL);
 
 static int create_debugfs_entries(struct smbchg_chip *chip)
