@@ -26,29 +26,11 @@
 #include "mdss_dsi.h"
 #include "mdss_livedisplay.h"
 
-/*FIH, Hubert, 20151021, modify the order of touch suspend before backlight for [NBQ-502] {*/
-#include <fih/hwid.h>
-/*} FIH, Hubert, 20151021, modify the order of touch suspend before backlight for [NBQ-502]*/
-
-/*FIH, Hubert, 20151030, fix touch no response when double press power key for [NBQ-1404] {*/
-#include <../drivers/input/touchscreen/synaptics_dsx/synaptics_dsx_core.h>
-/*} FIH, Hubert, 20151030, fix touch no response when double press power key for [NBQ-1404]*/
-
 #define DT_CMD_HDR 6
 #define MIN_REFRESH_RATE 30
 #define DEFAULT_MDP_TRANSFER_TIME 14000
 
 DEFINE_LED_TRIGGER(bl_led_trigger);
-
-/*FIH, Hubert, 20151020, modify the order of touch suspend before backlight for [NBQ-502] {*/
-extern struct device *synaptics_input_dev;
-extern int synaptics_rmi4_suspend(struct device *dev);
-/*} FIH, Hubert, 20151020, modify the order of touch suspend before backlight for [NBQ-502]*/
-
-/*FIH, Hubert, 20151030, fix touch no response when double press power key for [NBQ-1404] {*/
-extern struct synaptics_rmi4_data *syn_rmi4_data;
-extern int synaptics_rmi4_resume(struct device *dev);
-/*} FIH, Hubert, 20151030, fix touch no response when double press power key for [NBQ-1404]*/
 
 void mdss_dsi_panel_pwm_cfg(struct mdss_dsi_ctrl_pdata *ctrl)
 {
@@ -733,18 +715,6 @@ static void mdss_dsi_panel_bl_ctrl(struct mdss_panel_data *pdata,
 	switch (ctrl_pdata->bklt_ctrl) {
 	case BL_WLED:
 		led_trigger_event(bl_led_trigger, bl_level);
-/*FIH, Hubert, 20151021, modify the order of touch suspend before backlight for [NBQ-502] {*/
-		if((fih_hwid_fetch(FIH_HWID_PRJ) == FIH_PRJ_NBQ)
-			|| (fih_hwid_fetch(FIH_HWID_PRJ) == FIH_PRJ_VZW))
-		{
-			if ((synaptics_input_dev != NULL) && (bl_level == 0))
-				synaptics_rmi4_suspend(synaptics_input_dev);
-//FIH, Hubert, 20151030, fix touch no response when double press power key for [NBQ-1404] {
-			else if ((synaptics_input_dev != NULL) && (bl_level != 0) && (syn_rmi4_data->suspended == true))
-				synaptics_rmi4_resume(synaptics_input_dev);
-//} FIH, Hubert, 20151030, fix touch no response when double press power key for [NBQ-1404]
-		}
-/*} FIH, Hubert, 20151021, modify the order of touch suspend before backlight for [NBQ-502]*/
 		break;
 	case BL_PWM:
 		mdss_dsi_panel_bklt_pwm(ctrl_pdata, bl_level);
@@ -778,9 +748,6 @@ static void mdss_dsi_panel_bl_ctrl(struct mdss_panel_data *pdata,
 			__func__);
 		break;
 	}
-/*FIH, Hubert, 20151020, modify the order of touch suspend before backlight for [NBQ-502] {*/
-	pr_debug("LCM_backlight_bl_level:%d\n", bl_level);
-/*} FIH, Hubert, 20151020, modify the order of touch suspend before backlight for [NBQ-502]*/
 }
 
 static int mdss_dsi_panel_on(struct mdss_panel_data *pdata)

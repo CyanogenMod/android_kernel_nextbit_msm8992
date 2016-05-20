@@ -148,10 +148,6 @@ static int create_synaptics_proc_entry_of_getversion(void)
 }
 /*} FIH, Hubert, 20150831, add command "Touch" to AllHWList*/
 
-/*FIH, Hubert, 20151020, modify the order of touch suspend before backlight for [NBQ-502] {*/
-struct device *synaptics_input_dev = NULL;
-/*} FIH, Hubert, 20151020, modify the order of touch suspend before backlight for [NBQ-502]*/
-
 static int synaptics_rmi4_f12_set_enables(struct synaptics_rmi4_data *rmi4_data,
 		unsigned short ctrl28);
 
@@ -175,15 +171,9 @@ static void synaptics_rmi4_early_suspend(struct early_suspend *h);
 static void synaptics_rmi4_late_resume(struct early_suspend *h);
 #endif
 
-/*FIH, Hubert, 20151020, modify the order of touch suspend before backlight for [NBQ-502] {*/
-int synaptics_rmi4_suspend(struct device *dev);
-/*} FIH, Hubert, 20151020, modify the order of touch suspend before backlight for [NBQ-502]*/
+static int synaptics_rmi4_suspend(struct device *dev);
 
-/*FIH, Hubert, 20151030, fix touch no response when double press power key for [NBQ-1404] {*/
-int synaptics_rmi4_resume(struct device *dev);
-
-struct synaptics_rmi4_data *syn_rmi4_data;
-/*} FIH, Hubert, 20151030, fix touch no response when double press power key for [NBQ-1404]*/
+static int synaptics_rmi4_resume(struct device *dev);
 
 static ssize_t synaptics_rmi4_f01_reset_store(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count);
@@ -3857,10 +3847,6 @@ static int synaptics_rmi4_probe(struct platform_device *pdev)
 	register_early_suspend(&rmi4_data->early_suspend);
 #endif
 
-/*FIH, Hubert, 20151020, modify the order of touch suspend before backlight for [NBQ-502] {*/
-synaptics_input_dev = &(rmi4_data->input_dev->dev);
-/*} FIH, Hubert, 20151020, modify the order of touch suspend before backlight for [NBQ-502]*/
-
 	rmi4_data->irq = gpio_to_irq(bdata->irq_gpio);
 
 	retval = synaptics_rmi4_irq_enable(rmi4_data, true);
@@ -3941,10 +3927,6 @@ synaptics_input_dev = &(rmi4_data->input_dev->dev);
 /*FIH, Hubert, 20150831, add command "Touch" to AllHWList {*/
 	create_synaptics_proc_entry_of_getversion();
 /*} FIH, Hubert, 20150831, add command "Touch" to AllHWList*/
-
-/*FIH, Hubert, 20151030, fix touch no response when double press power key for [NBQ-1404] {*/
-syn_rmi4_data = rmi4_data;
-/*} FIH, Hubert, 20151030, fix touch no response when double press power key for [NBQ-1404]*/
 
 	pr_info("F@TOUCH %s_probe_succeed\n", __func__);
 	return retval;
@@ -4367,9 +4349,7 @@ int synaptics_rmi4_suspend(struct device *dev)
 			rmi4_data->hw_if->board_data;
 	int retval;
 
-/*FIH, Hubert, 20151020, modify the order of touch suspend before backlight for [NBQ-502] {*/
 	pr_debug("Touch_%s_start\n", __func__);
-/*} FIH, Hubert, 20151020, modify the order of touch suspend before backlight for [NBQ-502]*/
 
 	if (rmi4_data->stay_awake) {
 		rmi4_data->staying_awake = true;
@@ -4431,9 +4411,7 @@ int synaptics_rmi4_suspend(struct device *dev)
 
 	rmi4_data->suspended = true;
 
-/*FIH, Hubert, 20151020, modify the order of touch suspend before backlight for [NBQ-502] {*/
 	pr_debug("Touch_%s_end_success\n", __func__);
-/*} FIH, Hubert, 20151020, modify the order of touch suspend before backlight for [NBQ-502]*/
 
 	return 0;
 
@@ -4452,9 +4430,7 @@ err_lpm_regulator:
 		synaptics_rmi4_irq_enable(rmi4_data, true);
 		rmi4_data->touch_stopped = false;
 	}
-/*FIH, Hubert, 20151020, modify the order of touch suspend before backlight for [NBQ-502] {*/
 	pr_debug("Touch_%s_end_fail\n", __func__);
-/*} FIH, Hubert, 20151020, modify the order of touch suspend before backlight for [NBQ-502]*/
 
 	return retval;
 }
@@ -4469,9 +4445,7 @@ err_lpm_regulator:
  * from sleep, enables the interrupt, and starts finger data
  * acquisition.
  */
-/*FIH, Hubert, 20151030, fix touch no response when double press power key for [NBQ-1404] {*/
 int synaptics_rmi4_resume(struct device *dev)
-/*} FIH, Hubert, 20151030, fix touch no response when double press power key for [NBQ-1404]*/
 {
 	int retval;
 	struct synaptics_rmi4_exp_fhandler *exp_fhandler;
@@ -4479,9 +4453,7 @@ int synaptics_rmi4_resume(struct device *dev)
 	const struct synaptics_dsx_board_data *bdata =
 			rmi4_data->hw_if->board_data;
 
-/*FIH, Hubert, 20151020, modify the order of touch suspend before backlight for [NBQ-502] {*/
 	pr_debug("Touch_%s_start\n", __func__);
-/*} FIH, Hubert, 20151020, modify the order of touch suspend before backlight for [NBQ-502]*/
 
 	if (rmi4_data->staying_awake)
 		return 0;
@@ -4533,12 +4505,11 @@ int synaptics_rmi4_resume(struct device *dev)
 
 	synaptics_rmi4_irq_enable(rmi4_data, true);
 
-/*FIH, Hubert, 20151020, modify the order of touch suspend before backlight for [NBQ-502] {*/
 	pr_debug("Touch_%s_end_success\n", __func__);
-/*} FIH, Hubert, 20151020, modify the order of touch suspend before backlight for [NBQ-502]*/
 
 	return 0;
 }
+#endif
 
 static const struct dev_pm_ops synaptics_rmi4_dev_pm_ops = {
 #if (!defined(CONFIG_FB) && !defined(CONFIG_HAS_EARLYSUSPEND))
@@ -4546,21 +4517,6 @@ static const struct dev_pm_ops synaptics_rmi4_dev_pm_ops = {
 	.resume  = synaptics_rmi4_resume,
 #endif
 };
-#else
-int synaptics_rmi4_suspend(struct device *dev)
-{
-	dev_err(dev, "PM not supported\n");
-	return -EINVAL;
-}
-
-/*FIH, Hubert, 20151030, fix touch no response when double press power key for [NBQ-1404] {*/
-int synaptics_rmi4_resume(struct device *dev)
-/*} FIH, Hubert, 20151030, fix touch no response when double press power key for [NBQ-1404]*/
-{
-	dev_err(dev, "PM not supported\n");
-	return -EINVAL;
-}
-#endif
 
 static struct platform_driver synaptics_rmi4_driver = {
 	.driver = {
