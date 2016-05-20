@@ -50,9 +50,7 @@
 			39 01 00 00 00 00 02 AB FF
 			15 01 00 00 01 00 02 51 ff
 			15 01 00 00 01 00 02 53 24
-			05 01 00 00 78 00 02 11 00
-			39 01 00 00 00 00 03 44 03 c0
-			05 01 00 00 00 00 02 35 00 ];
+			39 01 00 00 00 00 03 44 03 c0 ];
 		qcom,mdss-dsi-off-command = [05 01 00 00 02 00 02 28 00
 				 05 01 00 00 a0 00 02 10 00];
 		qcom,mdss-dsi-on-command-state = "dsi_lp_mode";
@@ -106,8 +104,8 @@
 		cm,mdss-livedisplay-aco-value = <0x80>;
         */
 		cm,mdss-livedisplay-post-cmd = [
-			05 01 00 00 10 00 02 29 00];
-
+			05 01 00 00 10 00 02 29 00
+			05 01 00 00 78 00 02 11 00 ];
 		cm,mdss-livedisplay-color-enhance-on = [
 			29 01 00 00 00 00 02 00 00
 			29 01 00 00 00 00 04 FF 19 06 01
