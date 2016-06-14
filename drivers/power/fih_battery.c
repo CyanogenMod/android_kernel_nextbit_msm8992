@@ -680,6 +680,7 @@ static int fih_read_power_info(struct fih_chip *chip, char *psy_name)
 extern int fih_get_usbin_voltage_now(void);
 extern void fih_set_alert_info(u8 is_alert, bool byte_location, u8 val);
 extern void fih_check_fastchg_current_comp(int temp);
+extern int sensor_get_temp(uint32_t sensor_id, long *temp);
 static void fih_update_status(struct fih_chip *chip, int soc_int_bit)
 {
 	static struct power_info old_p = {
@@ -704,6 +705,8 @@ static void fih_update_status(struct fih_chip *chip, int soc_int_bit)
 	int ret = 0;
 #endif
 	int usbin_vol = 0;
+	long msm_therm = 0;
+	long pmic = 0;
 
 	if ((!soc_int_bit) && chip->update_time && time_before(jiffies, chip->update_time +  msecs_to_jiffies(cache_time)))
 		return;
@@ -724,9 +727,11 @@ static void fih_update_status(struct fih_chip *chip, int soc_int_bit)
 		pr_err("[%s] dc power-supply not ready\n", __func__);
 	}
 
+#if 0
 	if (fih_read_power_info(chip, "usb-parallel")) {
 		pr_err("[%s] dc power-supply not ready\n", __func__);
 	}
+#endif
 
 #ifdef CONFIG_BATTERY_PROTECTION
 	ret = batt_protection_detect();
@@ -766,15 +771,13 @@ static void fih_update_status(struct fih_chip *chip, int soc_int_bit)
 
 	if (show_info >= SHOW_INFO_THERSHOLD) {
 		show_info = 0;
-		pr_info("[%s] PRE:%d, STS:%d/%d, HEL:%d/%d, CAP:%d/%d/%d/%d, VOL:%d, CUR:%d, TMP:%d/%d, CEN:%d, CUM:%d, ICM:%d, "
-			"STL:%d, UPR:%d, UON:%d, USC:%d, UTP:%d, UVL:%d, SMT:%d, DPR:%d, DON:%d, DCN:%d, DIM:%d, BTR:%d, IDR:%d, "
-			"PPR:%d, PST:%d, PEN:%d, PCM:%d\n", __func__,
+		sensor_get_temp(15, &msm_therm);
+		sensor_get_temp(19, &pmic);
+		pr_info("[%s] PRE: %d, STS: %d/%d, HEL: %d/%d, CAP: %d/%d/%d/%d, VOL: %d, CUR: %d, TMP: %d/%d, CEN: %d, CUM: %d, ICM: %d, "
+			"STL: %d, UPR: %d, UON: %d, UTP: %d, UVL: %d, IDR: %d, MTM: %ld, PMIC: %ld\n", __func__,
 		p->bat_present, chip->qcchg_status, p->bat_status, chip->qcchg_health, p->bat_health, chip->qcchg_cap, p->bat_cap, g_full_cap, chip->fake_cap_en,
 		p->bat_vol_mV, p->bat_cur_mA, p->bat_temp_0p1C, chip->fake_temp_en, p->chg_enable, p->chg_cur_max_mA,
-		p->chg_input_cur_max_mA, p->chg_sys_lvl, p->usb_present, p->usb_online,
-		p->usb_scope, p->usb_type, usbin_vol/*p->usb_vol_mV*/, chip->smooth_flag,
-		p->dc_present, p->dc_online, p->dc_chg_enable, p->dc_input_cur_max_mA, p->bms_batr_ohm, p->bms_idr_ohm,
-		p->usbp_present, p->usbp_status, p->usbp_chg_enable, p->usbp_chg_cur_max_mA);
+		p->chg_input_cur_max_mA, p->chg_sys_lvl, p->usb_present, p->usb_online, p->usb_type, usbin_vol, p->bms_idr_ohm, msm_therm, pmic);
 
 		fih_check_fastchg_current_comp(p->bat_temp_0p1C);
 

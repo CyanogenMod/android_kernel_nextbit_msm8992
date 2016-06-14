@@ -698,6 +698,19 @@ static int mdss_dsi_update_panel_config(struct mdss_dsi_ctrl_pdata *ctrl_pdata,
 	return ret;
 }
 
+//JYLee added to force lp11 before reset to match spec 20160409 {
+void mdss_dsi_force_lp11(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
+{
+	u32 tmp;
+
+	tmp = MIPI_INP((ctrl_pdata->ctrl_base) + 0xac);
+	tmp &= ~(1<<28);
+	MIPI_OUTP((ctrl_pdata->ctrl_base) + 0xac, tmp);
+	wmb();
+	pr_err("Force lp11\n");
+}
+//JYLee added to force lp11 before reset to match spec 20160409 }
+
 int mdss_dsi_on(struct mdss_panel_data *pdata)
 {
 	int ret = 0;

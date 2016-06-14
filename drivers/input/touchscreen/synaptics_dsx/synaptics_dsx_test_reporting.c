@@ -32,7 +32,7 @@
 
 #define WATCHDOG_HRTIMER
 #define WATCHDOG_TIMEOUT_S 2
-#define FORCE_TIMEOUT_100MS 10
+#define FORCE_TIMEOUT_100MS 100
 #define STATUS_WORK_INTERVAL 20 /* ms */
 
 #define TP_rawdata_path "/data/TPRawdataFile"
@@ -1681,9 +1681,50 @@ static int do_preparation(void)
 
 	if (timeout_count == FORCE_TIMEOUT_100MS) {
 		dev_err(rmi4_data->pdev->dev.parent,
-				"%s: Timed out waiting for force update\n",
+				"%s: Timed out waiting for force update first time\n",
 				__func__);
-		return -ETIMEDOUT;
+
+		synaptics_test_reset_device(rmi4_data);
+
+		command = (unsigned char)COMMAND_FORCE_UPDATE;
+
+		retval = synaptics_rmi4_reg_write(rmi4_data,
+				f54->command_base_addr,
+				&command,
+				sizeof(command));
+		if (retval < 0) {
+			dev_err(rmi4_data->pdev->dev.parent,
+					"%s: Failed to write force update command\n",
+					__func__);
+			return retval;
+		}
+
+		timeout_count = 0;
+		do {
+			retval = synaptics_rmi4_reg_read(rmi4_data,
+					f54->command_base_addr,
+					&value,
+					sizeof(value));
+			if (retval < 0) {
+				dev_err(rmi4_data->pdev->dev.parent,
+						"%s: Failed to read command register\n",
+						__func__);
+				return retval;
+			}
+
+			if (value == 0x00)
+				break;
+
+			msleep(100);
+			timeout_count++;
+		} while (timeout_count < FORCE_TIMEOUT_100MS);
+
+		if (timeout_count == FORCE_TIMEOUT_100MS) {
+			dev_err(rmi4_data->pdev->dev.parent,
+					"%s: Timed out waiting for force update finish\n",
+					__func__);
+			return -ETIMEDOUT;
+		}
 	}
 
 	command = (unsigned char)COMMAND_FORCE_CAL;
@@ -2461,15 +2502,8 @@ static ssize_t fullRawCap(void)
 		}
 	}
 
-/*FIH, Hubert, 20151021, BBox for touch, vibrator, led {*/
 	if(TestResult != TEST_FAILED)
-	{
 		TestResult = TEST_PASS;
-		printk("BBox; Touch Panel self test pass\n");
-	}
-	else
-		printk("BBox; Touch Panel self test failed\n");
-/*} FIH, Hubert, 20151021, BBox for touch, vibrator, led*/
 
 	ret += snprintf(&(ResultArray[ret]),RESULT_SIZE,"\n");
 
@@ -4055,18 +4089,22 @@ exit:
 	return;
 }
 
-static void synaptics_rmi4_f54_reset(struct synaptics_rmi4_data *rmi4_data)
+/*FIH, Hubert, 20160302, after upgrade TP FW, to reinit f54 to solve virtual file (test) not created {*/
+void synaptics_rmi4_f54_reset(struct synaptics_rmi4_data *rmi4_data)
 {
 	if (!f54) {
 		synaptics_rmi4_f54_init(rmi4_data);
+		pr_info("!f54_%s\n", __func__);
 		return;
 	}
 
 	synaptics_rmi4_f54_remove(rmi4_data);
 	synaptics_rmi4_f54_init(rmi4_data);
+	pr_info("f54_%s\n", __func__);
 
 	return;
 }
+/*} FIH, Hubert, 20160302, after upgrade TP FW, to reinit f54 to solve virtual file (test) not created*/
 
 static struct synaptics_rmi4_exp_fn f54_module = {
 	.fn_type = RMI_F54,

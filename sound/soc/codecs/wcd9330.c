@@ -7622,16 +7622,28 @@ static int tomtom_handle_pdata(struct tomtom_priv *tomtom)
 		}
 	}
 
-	/* Set micbias capless mode with tail current */
-	value = (pdata->micbias.bias1_cap_mode == MICBIAS_EXT_BYP_CAP ?
-		 0x00 : 0x16);
+	//weihung[NBQM-2214]:It is obvious that this mic data wave has a toothed border ,and fixed it
+    pdata->micbias.bias1_cap_mode = MICBIAS_EXT_BYP_CAP;
+    pdata->micbias.bias3_cap_mode = MICBIAS_EXT_BYP_CAP;
+     value = (pdata->micbias.bias1_cap_mode == MICBIAS_EXT_BYP_CAP ?
+		 0x06 : 0x16);
 	snd_soc_update_bits(codec, TOMTOM_A_MICB_1_CTL, 0x1E, value);
-	value = (pdata->micbias.bias2_cap_mode == MICBIAS_EXT_BYP_CAP ?
-		 0x00 : 0x16);
-	snd_soc_update_bits(codec, TOMTOM_A_MICB_2_CTL, 0x1E, value);
 	value = (pdata->micbias.bias3_cap_mode == MICBIAS_EXT_BYP_CAP ?
-		 0x00 : 0x16);
+		 0x06 : 0x16);
 	snd_soc_update_bits(codec, TOMTOM_A_MICB_3_CTL, 0x1E, value);
+    //weihung [NBQM-2214]:It is obvious that this mic data wave has a toothed border ,and fixed it
+
+
+	/* Set micbias capless mode with tail current */
+	// value = (pdata->micbias.bias1_cap_mode == MICBIAS_EXT_BYP_CAP ?
+		 // 0x00 : 0x16);
+	// snd_soc_update_bits(codec, TOMTOM_A_MICB_1_CTL, 0x1E, value);
+	value = (pdata->micbias.bias2_cap_mode == MICBIAS_EXT_BYP_CAP ?
+		 0x06 : 0x16);
+	snd_soc_update_bits(codec, TOMTOM_A_MICB_2_CTL, 0x1E, value);
+	// value = (pdata->micbias.bias3_cap_mode == MICBIAS_EXT_BYP_CAP ?
+		 // 0x00 : 0x16);
+	// snd_soc_update_bits(codec, TOMTOM_A_MICB_3_CTL, 0x1E, value);
 	value = (pdata->micbias.bias4_cap_mode == MICBIAS_EXT_BYP_CAP ?
 		 0x00 : 0x16);
 	snd_soc_update_bits(codec, TOMTOM_A_MICB_4_CTL, 0x1E, value);
