@@ -185,7 +185,6 @@ exit:
 	if(retval < 0)
 	{
 		printk("BBox::UEC; 7::0\n");
-		printk("BBox; i2c read fail\n");
 	}
 /*} FIH, Hubert, 20151021, BBox for touch, vibrator, led*/
 
@@ -282,7 +281,6 @@ exit:
 	if(retval < 0)
 	{
 		printk("BBox::UEC; 7::1\n");
-		printk("BBox; i2c write fail\n");
 	}
 /*} FIH, Hubert, 20151021, BBox for touch, vibrator, led*/
 

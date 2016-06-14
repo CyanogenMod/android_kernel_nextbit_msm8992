@@ -363,7 +363,9 @@ disp_ldo_gpio_err:
 /*>>[NBQ-16] EricHsieh,END*/
 	return rc;
 }
-
+//JYLee added to force lp11 before reset to match spec 20160409 {
+extern void mdss_dsi_force_lp11(struct mdss_dsi_ctrl_pdata *ctrl_pdata);
+//JYLee added to force lp11 before reset to match spec 20160409 }
 int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 {
 	struct mdss_dsi_ctrl_pdata *ctrl_pdata = NULL;
@@ -410,13 +412,18 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 			if (gpio_is_valid(ctrl_pdata->disp_en_gpio))
 				gpio_set_value((ctrl_pdata->disp_en_gpio), 1);
 
-			usleep(1000); //JY added to match CTC power on spec 20151109
+//JYLee added to force lp11 before reset to match spec 20160409 {
+			mdss_dsi_force_lp11(ctrl_pdata);
+//JYLee added to force lp11 before reset to match spec 20160409 }
 /*<<[NBQ-16] EricHsieh,Implement the OTM1926C CTC 5.2" panel */
 			if (gpio_is_valid(ctrl_pdata->disp_ldo_gpio))
 				gpio_set_value((ctrl_pdata->disp_ldo_gpio), 1);
 /*>>[NBQ-16] EricHsieh,END */
 
-			usleep(10000); //JY added to match CTC power on spec 20151109
+//JYLee added to force lp11 before reset to match spec 20160409 {
+			usleep(5000);
+//JYLee added to force lp11 before reset to match spec 20160409 }
+
 			for (i = 0; i < pdata->panel_info.rst_seq_len; ++i) {
 				gpio_set_value((ctrl_pdata->rst_gpio),
 					pdata->panel_info.rst_seq[i]);
@@ -819,7 +826,7 @@ static int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
 		mdss_dsi_panel_cmds_send(ctrl, on_cmds, CMD_REQ_COMMIT);
 	}
 	//Buda added for BBS log
-	if (0) panel_print_status(ctrl);
+	if (1) panel_print_status(ctrl);
 	//Buda added for recovery backlight
 	if(strstr(saved_command_line, "androidboot.mode=1")!=NULL)
 	{

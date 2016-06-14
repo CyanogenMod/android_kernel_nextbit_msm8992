@@ -54,7 +54,7 @@
 				qcom,pause-hi = <500>;
 				qcom,pause-lo = <2000>;
 				qcom,lut-flags = <31>;
-				qcom,duty-pcts = [00 01 02 04 05 06 07 08 10 12 14 16 18 20];
+				qcom,duty-pcts = [00 01 02 03 04 05 06 07 08];
 				linux,name = "nbq_wled";
 				qcom,use-blink;
 				qcom,in-order-command-processing;

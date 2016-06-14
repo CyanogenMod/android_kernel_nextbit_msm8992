@@ -1454,9 +1454,7 @@ static int qpnp_hap_set(struct qpnp_hap *hap, int on)
 				if(fih_hwid_fetch(FIH_HWID_PRJ) == FIH_PRJ_NBQ)
 				{
 					printk("BBox::UEC; 19::2\n");
-					printk("BBox; Hap set fail\n");
 					printk("BBox::UEC; 19::5\n");
-					printk("BBox; Enable PWM fail\n");
 					return rc;
 				}
 			}
@@ -1625,7 +1623,6 @@ static int qpnp_hap_get_time(struct timed_output_dev *dev)
 		if(fih_hwid_fetch(FIH_HWID_PRJ) == FIH_PRJ_NBQ)
 		{
 			printk("BBox::UEC; 19::1\n");
-			printk("BBox; hrtimer_get_remaining error\n");
 		}
 /*} FIH, Hubert, 20151021, BBox for touch, vibrator, led*/
 		return 0;
@@ -2151,7 +2148,6 @@ static int qpnp_haptic_probe(struct spmi_device *spmi)
 		if(fih_hwid_fetch(FIH_HWID_PRJ) == FIH_PRJ_NBQ)
 		{
 			printk("BBox::UEC; 19::0\n");
-			printk("BBox; Probe fail at Unable to get haptic base address\n");
 		}
 /*} FIH, Hubert, 20151021, BBox for touch, vibrator, led*/
 		return -EINVAL;
@@ -2167,7 +2163,6 @@ static int qpnp_haptic_probe(struct spmi_device *spmi)
 		if(fih_hwid_fetch(FIH_HWID_PRJ) == FIH_PRJ_NBQ)
 		{
 			printk("BBox::UEC; 19::0\n");
-			printk("BBox; Probe fail at DT parsing failed\n");
 		}
 /*} FIH, Hubert, 20151021, BBox for touch, vibrator, led*/
 		return rc;
@@ -2180,7 +2175,6 @@ static int qpnp_haptic_probe(struct spmi_device *spmi)
 		if(fih_hwid_fetch(FIH_HWID_PRJ) == FIH_PRJ_NBQ)
 		{
 			printk("BBox::UEC; 19::0\n");
-			printk("BBox; Probe fail at hap config failed\n");
 		}
 /*} FIH, Hubert, 20151021, BBox for touch, vibrator, led*/
 		return rc;
@@ -2208,7 +2202,6 @@ static int qpnp_haptic_probe(struct spmi_device *spmi)
 		if(fih_hwid_fetch(FIH_HWID_PRJ) == FIH_PRJ_NBQ)
 		{
 			printk("BBox::UEC; 19::0\n");
-			printk("BBox; Probe fail at timed_output registration failed\n");
 		}
 /*} FIH, Hubert, 20151021, BBox for touch, vibrator, led*/
 		goto timed_output_fail;
@@ -2230,7 +2223,6 @@ static int qpnp_haptic_probe(struct spmi_device *spmi)
 			if(fih_hwid_fetch(FIH_HWID_PRJ) == FIH_PRJ_NBQ)
 			{
 				printk("BBox::UEC; 19::0\n");
-				printk("BBox; Probe fail at sysfs creation failed\n");
 			}
 /*} FIH, Hubert, 20151021, BBox for touch, vibrator, led*/
 			goto sysfs_fail;

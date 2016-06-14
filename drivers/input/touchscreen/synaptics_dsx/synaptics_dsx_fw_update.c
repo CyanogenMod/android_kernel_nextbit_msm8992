@@ -40,6 +40,10 @@ extern char fih_touch_fw[32];
 extern char fih_touch[32];
 /*} FIH, Hubert, 20151006, the information of touch firmware version*/
 
+/*FIH, Hubert, 20160302, after upgrade TP FW, to reinit f54 to solve virtual file (test) not created {*/
+extern void synaptics_rmi4_f54_reset(struct synaptics_rmi4_data *rmi4_data);
+/*} FIH, Hubert, 20160302, after upgrade TP FW, to reinit f54 to solve virtual file (test) not created*/
+
 /*  NBQ - EricHsieh - [06-23] - [Touch] Synaptics touch driver porting */
 /*  NBQ - EricHsieh - [06-41] - [Touch] Update Synaptics touch firmware */
 /*  NBQ - AlbertWu - [NBQ-45] - [Touch] Synaptics touch driver porting ,touch can work. */
@@ -1557,7 +1561,7 @@ static void fwu_startup_fw_update_work(struct work_struct *work)
 {
 	//synaptics_dsx_fw_updater(NULL);
 	int retval;
-	unsigned int input = FORCE;
+	unsigned int input = NORMAL;
 	struct synaptics_rmi4_data *rmi4_data = fwu->rmi4_data;
 
 	int retval_reg;
@@ -1571,7 +1575,7 @@ static void fwu_startup_fw_update_work(struct work_struct *work)
 	get_device_config_id = get_config_id[0]<<24 | get_config_id[1]<<16 | get_config_id[2]<<8 | get_config_id[3];
 	pr_info("get_device_config_id_x:%x\n", get_device_config_id);
 	if ((fih_hwid_fetch(FIH_HWID_REV) >= FIH_REV_DVT2) &&
-		(get_device_config_id < 0xDD000035) )
+		(get_device_config_id < 0xDD000037) )
 	{
 		pr_info("Start_run!\n");
 		if (input & LOCKDOWN) {
@@ -1612,9 +1616,7 @@ static void fwu_startup_fw_update_work(struct work_struct *work)
 /*FIH, Hubert, 20151021, BBox for touch, vibrator, led {*/
 		if(retval_reg < 0)
 		{
-			printk("BBox; fw version:%s\n", fih_touch_fw);
 			printk("BBox::UEC; 7::4\n");
-			printk("BBox; firmware version get fail\n");
 		}
 /*} FIH, Hubert, 20151021, BBox for touch, vibrator, led*/
 
@@ -1625,12 +1627,16 @@ exit:
 	fwu->do_lockdown = DO_LOCKDOWN;
 
 /*FIH, Hubert, 20151021, BBox for touch, vibrator, led {*/
-		if(retval < 0)
-		{
-			printk("BBox::UEC; 7::5\n");
-			printk("BBox; touch firmware upgrade fail\n");
-		}
+	if(retval < 0)
+	{
+		printk("BBox::UEC; 7::5\n");
+	}
 /*} FIH, Hubert, 20151021, BBox for touch, vibrator, led*/
+
+/*FIH, Hubert, 20160302, after upgrade TP FW, to reinit f54 to solve virtual file (test) not created {*/
+	synaptics_rmi4_f54_reset(rmi4_data);
+/*} FIH, Hubert, 20160302, after upgrade TP FW, to reinit f54 to solve virtual file (test) not created */
+
 	}
 	return;
 }
@@ -1776,9 +1782,7 @@ static ssize_t fwu_sysfs_do_reflash_store(struct device *dev,
 /*FIH, Hubert, 20151021, BBox for touch, vibrator, led {*/
 	if(retval_reg < 0)
 	{
-		printk("BBox; fw version:%s\n", fih_touch_fw);
 		printk("BBox::UEC; 7::4\n");
-		printk("BBox; firmware version get fail\n");
 	}
 /*} FIH, Hubert, 20151021, BBox for touch, vibrator, led*/
 
@@ -1794,7 +1798,6 @@ exit:
 	if(retval < 0)
 	{
 		printk("BBox::UEC; 7::5\n");
-		printk("BBox; touch firmware upgrade fail\n");
 	}
 /*} FIH, Hubert, 20151021, BBox for touch, vibrator, led*/
 
@@ -1856,9 +1859,7 @@ static ssize_t fwu_sysfs_appupgrade_store(struct device *dev,
 /*FIH, Hubert, 20151021, BBox for touch, vibrator, led {*/
 	if(retval_reg < 0)
 	{
-		printk("BBox; fw version:%s\n", fih_touch_fw);
 		printk("BBox::UEC; 7::4\n");
-		printk("BBox; firmware version get fail\n");
 	}
 /*} FIH, Hubert, 20151021, BBox for touch, vibrator, led*/
 
@@ -1874,7 +1875,6 @@ exit:
 	if(retval < 0)
 	{
 		printk("BBox::UEC; 7::5\n");
-		printk("BBox; touch firmware upgrade fail\n");
 	}
 /*} FIH, Hubert, 20151021, BBox for touch, vibrator, led*/
 

@@ -3930,11 +3930,9 @@ synaptics_input_dev = &(rmi4_data->input_dev->dev);
 /* end  NBQ - AlbertWu - [NBQ-74] */
 
 /*FIH, Hubert, 20151021, BBox for touch, vibrator, led {*/
-	printk("BBox; %s\n", fih_touch_fw);
 	if(retval_reg < 0)
 	{
 		printk("BBox::UEC; 7::4\n");
-		printk("BBox; firmware version get fail\n");
 	}
 /*} FIH, Hubert, 20151021, BBox for touch, vibrator, led*/
 

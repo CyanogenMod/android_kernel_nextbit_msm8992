@@ -1854,7 +1854,6 @@ static void __qpnp_led_work(struct qpnp_led_data *led,
 			if(fih_hwid_fetch(FIH_HWID_PRJ) == FIH_PRJ_NBQ)
 			{
 				printk("BBox::UEC; 23::1\n");
-				printk("BBox; RGB set brightness failed\n");
 			}
 		}
 /*} FIH, Hubert, 20151021, BBox for touch, vibrator, led*/
@@ -1869,7 +1868,6 @@ static void __qpnp_led_work(struct qpnp_led_data *led,
 			if(fih_hwid_fetch(FIH_HWID_PRJ) == FIH_PRJ_NBQ)
 			{
 				printk("BBox::UEC; 23::1\n");
-				printk("BBox; MPP set brightness failed\n");
 			}
 		}
 /*} FIH, Hubert, 20151021, BBox for touch, vibrator, led*/
@@ -3891,7 +3889,6 @@ static int qpnp_leds_probe(struct spmi_device *spmi)
 		if(fih_hwid_fetch(FIH_HWID_PRJ) == FIH_PRJ_NBQ)
 		{
 			printk("BBox::UEC; 23::0\n");
-			printk("BBox; Probe fail at No such device\n");
 		}
 		return -ENODEV;
 	}
@@ -3907,7 +3904,6 @@ static int qpnp_leds_probe(struct spmi_device *spmi)
 		if(fih_hwid_fetch(FIH_HWID_PRJ) == FIH_PRJ_NBQ)
 		{
 			printk("BBox::UEC; 23::0\n");
-			printk("BBox; Probe fail at No child processes\n");
 		}
 		return -ECHILD;
 	}
@@ -3921,7 +3917,6 @@ static int qpnp_leds_probe(struct spmi_device *spmi)
 		if(fih_hwid_fetch(FIH_HWID_PRJ) == FIH_PRJ_NBQ)
 		{
 			printk("BBox::UEC; 23::0\n");
-			printk("BBox; Probe fail at Unable to allocate memory\n");
 		}
 /*} FIH, Hubert, 20151021, BBox for touch, vibrator, led*/
 		return -ENOMEM;
@@ -3940,7 +3935,6 @@ static int qpnp_leds_probe(struct spmi_device *spmi)
 			if(fih_hwid_fetch(FIH_HWID_PRJ) == FIH_PRJ_NBQ)
 			{
 				printk("BBox::UEC; 23::0\n");
-				printk("BBox; Probe fail at Unable to get LED base address\n");
 			}
 /*} FIH, Hubert, 20151021, BBox for touch, vibrator, led*/
 			goto fail_id_check;
@@ -3955,7 +3949,6 @@ static int qpnp_leds_probe(struct spmi_device *spmi)
 			if(fih_hwid_fetch(FIH_HWID_PRJ) == FIH_PRJ_NBQ)
 			{
 				printk("BBox::UEC; 23::0\n");
-				printk("BBox; Probe fail at Failure reading label\n");
 			}
 /*} FIH, Hubert, 20151021, BBox for touch, vibrator, led*/
 			goto fail_id_check;
@@ -3970,7 +3963,6 @@ static int qpnp_leds_probe(struct spmi_device *spmi)
 			if(fih_hwid_fetch(FIH_HWID_PRJ) == FIH_PRJ_NBQ)
 			{
 				printk("BBox::UEC; 23::0\n");
-				printk("BBox; Probe fail at Failure reading led name\n");
 			}
 /*} FIH, Hubert, 20151021, BBox for touch, vibrator, led*/
 			goto fail_id_check;
@@ -3985,7 +3977,6 @@ static int qpnp_leds_probe(struct spmi_device *spmi)
 			if(fih_hwid_fetch(FIH_HWID_PRJ) == FIH_PRJ_NBQ)
 			{
 				printk("BBox::UEC; 23::0\n");
-				printk("BBox; Probe fail at Failure reading max_current\n");
 			}
 /*} FIH, Hubert, 20151021, BBox for touch, vibrator, led*/
 			goto fail_id_check;
@@ -3999,7 +3990,6 @@ static int qpnp_leds_probe(struct spmi_device *spmi)
 			if(fih_hwid_fetch(FIH_HWID_PRJ) == FIH_PRJ_NBQ)
 			{
 				printk("BBox::UEC; 23::0\n");
-				printk("BBox; Probe fail at Failure reading led id\n");
 			}
 /*} FIH, Hubert, 20151021, BBox for touch, vibrator, led*/
 			goto fail_id_check;
@@ -4014,7 +4004,6 @@ static int qpnp_leds_probe(struct spmi_device *spmi)
 			if(fih_hwid_fetch(FIH_HWID_PRJ) == FIH_PRJ_NBQ)
 			{
 				printk("BBox::UEC; 23::0\n");
-				printk("BBox; Probe fail at Failure reading common led configuration\n");
 			}
 /*} FIH, Hubert, 20151021, BBox for touch, vibrator, led*/
 			goto fail_id_check;
@@ -4049,7 +4038,6 @@ static int qpnp_leds_probe(struct spmi_device *spmi)
 				if(fih_hwid_fetch(FIH_HWID_PRJ) == FIH_PRJ_NBQ)
 				{
 					printk("BBox::UEC; 23::0\n");
-					printk("BBox; Probe fail at Unable to read rgb config data\n");
 				}
 /*} FIH, Hubert, 20151021, BBox for touch, vibrator, led*/
 				goto fail_id_check;
@@ -4063,7 +4051,6 @@ static int qpnp_leds_probe(struct spmi_device *spmi)
 				if(fih_hwid_fetch(FIH_HWID_PRJ) == FIH_PRJ_NBQ)
 				{
 					printk("BBox::UEC; 23::0\n");
-					printk("BBox; Probe fail at Unable to read mpp config data\n");
 				}
 /*} FIH, Hubert, 20151021, BBox for touch, vibrator, led*/
 				goto fail_id_check;
@@ -4091,7 +4078,6 @@ static int qpnp_leds_probe(struct spmi_device *spmi)
 			if(fih_hwid_fetch(FIH_HWID_PRJ) == FIH_PRJ_NBQ)
 			{
 				printk("BBox::UEC; 23::0\n");
-				printk("BBox; Probe fail at No LED matching label\n");
 			}
 /*} FIH, Hubert, 20151021, BBox for touch, vibrator, led*/
 			goto fail_id_check;
@@ -4118,7 +4104,6 @@ static int qpnp_leds_probe(struct spmi_device *spmi)
 				if(fih_hwid_fetch(FIH_HWID_PRJ) == FIH_PRJ_NBQ)
 				{
 					printk("BBox::UEC; 23::0\n");
-					printk("BBox; Probe fail at Out of Memory\n");
 				}
 /*} FIH, Hubert, 20151021, BBox for touch, vibrator, led*/
 				goto fail_id_check;
@@ -4134,7 +4119,6 @@ static int qpnp_leds_probe(struct spmi_device *spmi)
 			if(fih_hwid_fetch(FIH_HWID_PRJ) == FIH_PRJ_NBQ)
 			{
 				printk("BBox::UEC; 23::0\n");
-				printk("BBox; Probe fail at qpnp_led_initialize fail\n");
 			}
 			goto fail_id_check;
 		}
@@ -4147,7 +4131,6 @@ static int qpnp_leds_probe(struct spmi_device *spmi)
 			if(fih_hwid_fetch(FIH_HWID_PRJ) == FIH_PRJ_NBQ)
 			{
 				printk("BBox::UEC; 23::0\n");
-				printk("BBox; Probe fail at qpnp_led_set_max_brightness fail\n");
 			}
 			goto fail_id_check;
 		}
@@ -4161,7 +4144,6 @@ static int qpnp_leds_probe(struct spmi_device *spmi)
 			if(fih_hwid_fetch(FIH_HWID_PRJ) == FIH_PRJ_NBQ)
 			{
 				printk("BBox::UEC; 23::0\n");
-				printk("BBox; Probe fail at unable to register led\n");
 			}
 /*} FIH, Hubert, 20151021, BBox for touch, vibrator, led*/
 			goto fail_id_check;
@@ -4275,7 +4257,6 @@ if((fih_hwid_fetch(FIH_HWID_PRJ) == FIH_PRJ_NBQ)
 			rc = PTR_ERR(regulator_wled);
 			//FIH, Hubert, 20151021, BBox for touch, vibrator, led
 			printk("BBox::UEC; 23::0\n");
-			printk("BBox; %s: Failed to get regulator wled:%d\n", __func__, rc);
 		}
 		else
 		{
@@ -4285,7 +4266,6 @@ if((fih_hwid_fetch(FIH_HWID_PRJ) == FIH_PRJ_NBQ)
 				regulator_put(regulator_wled);
 				//FIH, Hubert, 20151021, BBox for touch, vibrator, led
 				printk("BBox::UEC; 23::0\n");
-				printk("BBox; %s: Failed to enable regulator wled\n", __func__);
 			}
 		}
 	}

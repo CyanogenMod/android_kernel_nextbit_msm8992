@@ -209,7 +209,7 @@
 			qcom,dc-psy-ma = <1500>;
 			qcom,rparasitic-uohm = <100000>;
 			qcom,bms-psy-name = "bms";
-			qcom,thermal-mitigation = <1500 700 600 0>;
+			qcom,thermal-mitigation = <3000 2000 1500 1200 0>;
 			qcom,parallel-usb-min-current-ma = <1400>;
 			qcom,parallel-usb-9v-min-current-ma = <900>;
 			qcom,parallel-allowed-lowering-ma = <500>;
@@ -542,6 +542,7 @@
 			qcom,en-phase-stag;
 			qcom,led-strings-list = [00 01]; //JY modified for CTC BL spec 20151005 //[00 01 02 03];
 			qcom,en-ext-pfet-sc-pro;
+			qcom,en-cabc; //JY added to enable CABC PWM 20160129
 		};
 
 		pmi8994_haptics: qcom,haptic@c000 {

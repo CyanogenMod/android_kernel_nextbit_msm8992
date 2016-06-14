@@ -78,7 +78,6 @@ static int override_phy_init;
 module_param(override_phy_init, int, S_IRUGO|S_IWUSR);
 MODULE_PARM_DESC(override_phy_init, "Override HSPHY Init Seq");
 
-#define FIH_CHARGER_DETECT
 /* Enable Proprietary charger detection */
 #ifdef FIH_CHARGER_DETECT
 static bool prop_chg_detect = 1;
@@ -1501,7 +1500,7 @@ static void fih_dwc3_chg_detect_work(struct work_struct *w)
 	static bool dcd;
 	unsigned long delay;
 
-	dev_dbg(mdwc->mdwc->dev, "chg detection work\n");
+	dev_dbg(mdwc->mdwc->dev, "fih chg detection work\n");
 	switch (mdwc->chg_state) {
 	case USB_CHG_STATE_UNDEFINED:
 		dwc3_chg_block_reset(mdwc->mdwc);
@@ -1552,7 +1551,6 @@ static void fih_dwc3_chg_detect_work(struct work_struct *w)
 						DWC3_FLOATED_CHARGER;
 				mdwc->mdwc->usb_psy.type = POWER_SUPPLY_TYPE_USB_DCP;
 				phy->set_power(phy, 500);
-				BBOX_USB_FLOAT_CHARGER;
 			} else {
 				mdwc->chg_type = DWC3_SDP_CHARGER;
 			}
@@ -1562,10 +1560,14 @@ static void fih_dwc3_chg_detect_work(struct work_struct *w)
 		break;
 	case USB_CHG_STATE_PRIMARY_DONE:
 		vout = dwc3_chg_det_check_output(mdwc->mdwc);
-		if (vout)
+		if (vout) {
 			mdwc->chg_type = DWC3_DCP_CHARGER;
-		else
+			mdwc->mdwc->usb_psy.type = POWER_SUPPLY_TYPE_USB_DCP;
+		}
+		else {
 			mdwc->chg_type = DWC3_CDP_CHARGER;
+			mdwc->mdwc->usb_psy.type = POWER_SUPPLY_TYPE_USB_CDP;
+		}
 		mdwc->chg_state = USB_CHG_STATE_SECONDARY_DONE;
 		/* fall through */
 	case USB_CHG_STATE_SECONDARY_DONE:
@@ -1580,6 +1582,7 @@ static void fih_dwc3_chg_detect_work(struct work_struct *w)
 		}
 		dev_info(mdwc->mdwc->dev, "chg_type = %s\n",
 			chg_to_string(mdwc->chg_type));
+		power_supply_changed(&fih_mdwc->mdwc->usb_psy);
 		return;
 	default:
 		return;
@@ -1590,9 +1593,9 @@ static void fih_dwc3_chg_detect_work(struct work_struct *w)
 
 void fih_dwc3_start_chg_det(bool start)
 {
-	dev_info(fih_mdwc->mdwc->dev, "%s: %d\n", __func__, start);
+	dev_dbg(fih_mdwc->mdwc->dev, "%s: %d\n", __func__, start);
 	if (start == false) {
-		dev_info(fih_mdwc->mdwc->dev, "canceling charging detection work\n");
+		dev_dbg(fih_mdwc->mdwc->dev, "canceling charging detection work\n");
 		cancel_delayed_work_sync(&fih_mdwc->chg_work);
 		fih_mdwc->chg_state = USB_CHG_STATE_UNDEFINED;
 		fih_mdwc->chg_type = DWC3_INVALID_CHARGER;
@@ -1612,21 +1615,50 @@ EXPORT_SYMBOL(fih_dwc3_start_chg_det);
 
 int check_charger_detect_status(void)
 {
-	dev_info(fih_mdwc->mdwc->dev, "%s: return %d\n", __func__, fih_mdwc->chg_state);
 	return fih_mdwc->chg_state;
 }
 EXPORT_SYMBOL(check_charger_detect_status);
 
 int check_charger_detect_type(void)
 {
-	dev_info(fih_mdwc->mdwc->dev, "%s: return %d\n", __func__, fih_mdwc->chg_type);
 	return fih_mdwc->chg_type;
 }
 EXPORT_SYMBOL(check_charger_detect_type);
 
+enum power_supply_type check_charger_detect_type_for_battery(void)
+{
+	enum power_supply_type ret;
+	if(fih_mdwc->chg_state == USB_CHG_STATE_DETECTED) {
+		switch (fih_mdwc->chg_type) {
+			case DWC3_SDP_CHARGER:
+				ret = POWER_SUPPLY_TYPE_USB;
+				break;
+			case DWC3_FLOATED_CHARGER:
+				ret = POWER_SUPPLY_TYPE_USB;
+				break;
+			case DWC3_DCP_CHARGER:
+				ret = POWER_SUPPLY_TYPE_USB_DCP;
+				break;
+			case DWC3_CDP_CHARGER:
+				ret = POWER_SUPPLY_TYPE_USB_CDP;
+				break;
+			case DWC3_PROPRIETARY_CHARGER:
+				ret = POWER_SUPPLY_TYPE_USB_ACA;
+				break;
+			default:
+				ret = -1;
+				break;
+		}
+	} else {
+		ret = -1;
+	}
+	dev_info(fih_mdwc->mdwc->dev, "%s: return %d\n", __func__, ret);
+	return ret;
+}
+EXPORT_SYMBOL(check_charger_detect_type_for_battery);
+
 void set_charger_type(int input)
 {
-	dev_info(fih_mdwc->mdwc->dev, "%s: enter\n", __func__);
 	fih_mdwc->mdwc->usb_psy.type = input;
 	power_supply_changed(&fih_mdwc->mdwc->usb_psy);
 }
@@ -2519,6 +2551,9 @@ static int dwc3_msm_power_set_property_usb(struct power_supply *psy,
 		mdwc->vbus_active = val->intval;
 #ifdef FIH_CHARGER_DETECT
 		fih_sdp_retry_count = 0;
+#endif
+#ifdef FIH_USB_RETRY_METHOD
+		check_charger_retry_count_func(0, 1);
 #endif
 		if (mdwc->otg_xceiv && !mdwc->ext_inuse && !mdwc->in_restart) {
 			if (mdwc->ext_xceiv.bsv == val->intval)
