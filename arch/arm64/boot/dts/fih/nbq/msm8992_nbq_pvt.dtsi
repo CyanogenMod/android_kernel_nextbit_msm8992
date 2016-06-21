@@ -121,6 +121,10 @@
 
 /* USB */
 
+&spi_0 {
+	status = "disabled";
+};
+
 /* Vibrator */
 /include/ "nbq/nbq-haptics.dtsi"
 
