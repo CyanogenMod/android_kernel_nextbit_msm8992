@@ -559,7 +559,6 @@ static void synaptics_secure_touch_notify(struct synaptics_rmi4_data *rmi4_data)
 {
 	sysfs_notify(&rmi4_data->input_dev->dev.kobj, NULL, "secure_touch");
 }
-#if 0
 static irqreturn_t synaptics_filter_interrupt(
 	struct synaptics_rmi4_data *rmi4_data)
 {
@@ -573,7 +572,6 @@ static irqreturn_t synaptics_filter_interrupt(
 	}
 	return IRQ_NONE;
 }
-#endif
 static void synaptics_secure_touch_stop(
 	struct synaptics_rmi4_data *rmi4_data,
 	int blocking)
@@ -590,15 +588,11 @@ static void synaptics_secure_touch_stop(
 static void synaptics_secure_touch_init(struct synaptics_rmi4_data *rmi4_data)
 {
 }
-/*  NBQ - AlbertWu - [NBQ-45] - [Touch] Synaptics touch driver porting ,touch can work. */
-#if 0
 static irqreturn_t synaptics_filter_interrupt(
 	struct synaptics_rmi4_data *rmi4_data)
 {
 	return IRQ_NONE;
 }
-#endif
-/* end  NBQ - AlbertWu - [NBQ-45] */
 static void synaptics_secure_touch_stop(
 	struct synaptics_rmi4_data *rmi4_data,
 	int blocking)
@@ -988,6 +982,11 @@ static int synaptics_rmi4_f11_abs_report(struct synaptics_rmi4_data *rmi4_data,
 	if (retval < 0)
 		return 0;
 
+	input_event(rmi4_data->input_dev, EV_SYN, SYN_TIME_SEC,
+			ktime_to_timespec(rmi4_data->timestamp).tv_sec);
+	input_event(rmi4_data->input_dev, EV_SYN, SYN_TIME_NSEC,
+			ktime_to_timespec(rmi4_data->timestamp).tv_nsec);
+
 	for (finger = 0; finger < fingers_supported; finger++) {
 		reg_index = finger / 4;
 		finger_shift = (finger % 4) * 2;
@@ -1172,6 +1171,11 @@ static int synaptics_rmi4_f12_abs_report(struct synaptics_rmi4_data *rmi4_data,
 		return 0;
 
 	data = (struct synaptics_rmi4_f12_finger_data *)fhandler->data;
+
+	input_event(rmi4_data->input_dev, EV_SYN, SYN_TIME_SEC,
+			ktime_to_timespec(rmi4_data->timestamp).tv_sec);
+	input_event(rmi4_data->input_dev, EV_SYN, SYN_TIME_NSEC,
+			ktime_to_timespec(rmi4_data->timestamp).tv_nsec);
 
 	for (finger = 0; finger < fingers_to_process; finger++) {
 		finger_data = data + finger;
@@ -1501,15 +1505,13 @@ static void synaptics_rmi4_sensor_report(struct synaptics_rmi4_data *rmi4_data)
 static irqreturn_t synaptics_rmi4_irq(int irq, void *data)
 {
 	struct synaptics_rmi4_data *rmi4_data = data;
-/*  NBQ - AlbertWu - [NBQ-45] - [Touch] Synaptics touch driver porting ,touch can work. */
-	//if (IRQ_HANDLED == synaptics_filter_interrupt(data))
-		//return IRQ_HANDLED;
-	//synaptics_rmi4_sensor_report(rmi4_data);
-	disable_irq_nosync(irq);
+
+	rmi4_data->timestamp = ktime_get();
+
+	if (IRQ_HANDLED == synaptics_filter_interrupt(data))
+		return IRQ_HANDLED;
 	if (!rmi4_data->touch_stopped)
-	synaptics_rmi4_sensor_report(rmi4_data);
-	enable_irq(irq);
-/* end  NBQ - AlbertWu - [NBQ-45] */
+		synaptics_rmi4_sensor_report(rmi4_data);
 	return IRQ_HANDLED;
 }
 
