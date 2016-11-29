@@ -311,7 +311,7 @@ static int audio_effects_shared_ioctl(struct file *file, unsigned cmd,
 			}
 			if ((effects->config.buf_cfg.input_len > size) ||
 				copy_to_user((void *)arg, bufptr,
-					effects->config.buf_cfg.input_len)) {
+					  effects->config.buf_cfg.input_len)) {
 				rc = -EFAULT;
 				goto ioctl_fail;
 			}
@@ -621,6 +621,8 @@ static long audio_effects_compat_ioctl(struct file *file, unsigned int cmd,
 	}
 	case AUDIO_EFFECTS_GET_BUF_AVAIL32: {
 		struct msm_hwacc_buf_avail32 buf_avail;
+
+		memset(&buf_avail, 0, sizeof(buf_avail));
 
 		buf_avail.input_num_avail = atomic_read(&effects->in_count);
 		buf_avail.output_num_avail = atomic_read(&effects->out_count);

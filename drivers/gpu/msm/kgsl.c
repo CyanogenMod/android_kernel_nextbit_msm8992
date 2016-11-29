@@ -304,7 +304,7 @@ EXPORT_SYMBOL(kgsl_mem_entry_destroy);
  * @returns - 0 on success else error code
  *
  * This function should be called with processes memory spinlock held
- */
+*/
 static int
 kgsl_mem_entry_track_gpuaddr(struct kgsl_process_private *process,
 				struct kgsl_mem_entry *entry)
@@ -336,7 +336,7 @@ done:
 }
 
 static void kgsl_mem_entry_commit_mem_list(struct kgsl_process_private *process,
-						struct kgsl_mem_entry *entry)
+				struct kgsl_mem_entry *entry)
 {
 	struct rb_node **node;
 	struct rb_node *parent = NULL;
@@ -363,7 +363,7 @@ static void kgsl_mem_entry_commit_mem_list(struct kgsl_process_private *process,
 }
 
 static void kgsl_mem_entry_commit_process(struct kgsl_process_private *process,
-						struct kgsl_mem_entry *entry)
+				struct kgsl_mem_entry *entry)
 {
 	if (!entry)
 		return;
@@ -1592,7 +1592,7 @@ void kgsl_dump_syncpoints(struct kgsl_device *device,
 		}
 		case KGSL_CMD_SYNCPOINT_TYPE_FENCE:
 			if (event->handle)
-				dev_err(device->dev, "  fence: [%p] %s\n",
+				dev_err(device->dev, "  fence: [%pK] %s\n",
 					event->handle->fence,
 					event->handle->name);
 			else
@@ -2897,7 +2897,8 @@ static int kgsl_setup_useraddr(struct kgsl_mem_entry *entry,
 	struct vm_area_struct *vma = NULL;
 	int ret;
 
-	if (param->offset != 0 || param->hostptr == 0
+	if (param->len == 0 || param->offset != 0
+		|| param->hostptr == 0
 		|| !KGSL_IS_PAGE_ALIGNED(param->hostptr)
 		|| !KGSL_IS_PAGE_ALIGNED(param->len))
 		return -EINVAL;
@@ -4486,19 +4487,15 @@ static int kgsl_mmap(struct file *file, struct vm_area_struct *vma)
 
 	if (cache == KGSL_CACHEMODE_WRITEBACK
 		|| cache == KGSL_CACHEMODE_WRITETHROUGH) {
-		struct scatterlist *s;
 		int i;
-		int sglen = entry->memdesc.sglen;
 		unsigned long addr = vma->vm_start;
+		struct kgsl_memdesc *m = &entry->memdesc;
 
-		for_each_sg(entry->memdesc.sg, s, sglen, i) {
-			int j;
-			for (j = 0; j < (s->length >> PAGE_SHIFT); j++) {
-				struct page *page = sg_page(s);
-				page = nth_page(page, j);
-				vm_insert_page(vma, addr, page);
-				addr += PAGE_SIZE;
-			}
+		for (i = 0; i < m->page_count; i++) {
+			struct page *page = m->pages[i];
+
+			vm_insert_page(vma, addr, page);
+			addr += PAGE_SIZE;
 		}
 	}
 
@@ -4697,9 +4694,8 @@ int kgsl_device_platform_probe(struct kgsl_device *device)
 	disable_irq(device->pwrctrl.interrupt_num);
 
 	KGSL_DRV_INFO(device,
-		"dev_id %d regs phys 0x%08lx size 0x%08x virt %p\n",
-		device->id, device->reg_phys, device->reg_len,
-		device->reg_virt);
+		"dev_id %d regs phys 0x%08lx size 0x%08x\n",
+		device->id, device->reg_phys, device->reg_len);
 
 	rwlock_init(&device->context_lock);
 
@@ -4910,8 +4906,6 @@ static int __init kgsl_core_init(void)
 	}
 
 	kgsl_memfree_init();
-
-	kgsl_heap_init();
 
 	return 0;
 
